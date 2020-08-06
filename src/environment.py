@@ -20,9 +20,9 @@ class Ludo(object):
         """ Reset the environment and return the initial state number
         """
         self.num_players = num_players
-        self.positions = torch.ones(size=(num_players, TOKENS_PER_PLAYER), dtype=int) * (-1)
+        self.positions = torch.ones(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=int) * (-1)
         self.board_state = torch.zeros(BOARD_LENGTH, dtype=int)
-        self.starts = torch.zeros(num_players, dtype=int)
+        self.starts = torch.zeros(MAX_PLAYERS, dtype=int)
         if self.num_players == 2:
             self.starts[0] = 0
             self.starts[1] = 2 * START_DISTANCE
@@ -35,8 +35,8 @@ class Ludo(object):
             self.starts[1] = 2 * START_DISTANCE
             self.starts[2] = 1 * START_DISTANCE
             self.starts[3] = 3 * START_DISTANCE
-        self.passed = torch.zeros(size=(self.num_players, TOKENS_PER_PLAYER), dtype=int)
-        self.home_state = torch.zeros(size=(self.num_players, TOKENS_PER_PLAYER), dtype=int)
+        self.passed = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=int)
+        self.home_state = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=int)
         self.current_player = 0
 
         return self.current_state()

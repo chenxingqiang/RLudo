@@ -9,7 +9,7 @@ from players.random_player import RandomPlayer
 PATH_CHAR = 'X'
 HOME_CHAR = 'O'
 PIECE_CHAR = 'P'
-TOKENS = 2
+TOKENS = 4
 matrix = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
           [-1, -1, -1, -1, -1, 18, 19, 20, -1, -1, -1, -1, -1],
           [-1, -1, -1, -1, -1, 17, -1, 21, -1, -1, -1, -1, -1],
@@ -176,6 +176,8 @@ def raw_loop(screen):
     game_end = False
     agent1 = RandomPlayer()
     agent2 = RandomPlayer()
+    agent3 = RandomPlayer()
+    agent4 = RandomPlayer()
     state = env.current_state
     while not game_end:
         roll = random.randrange(1, 7)
@@ -183,6 +185,10 @@ def raw_loop(screen):
             action = agent1.play(state, TOKENS)
         elif env.current_player == 1:
             action = agent2.play(state, TOKENS)
+        elif env.current_player == 2:
+            action = agent3.play(state, TOKENS)
+        elif env.current_player == 3:
+            action = agent4.play(state, TOKENS)
         else:
             raise RuntimeError()
         state, r, game_end = env.step(roll, action)
