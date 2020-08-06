@@ -1,8 +1,8 @@
 import curses
 import curses.textpad
 import random
-from environment import Ludo
-from players.random_player import RandomPlayer
+from src.environment import Ludo
+from src.players.random_player import RandomPlayer
 # Radi samo iz komandne linije
 
 PATH_CHAR = 'X'
