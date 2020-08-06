@@ -3,8 +3,8 @@ import torch
 import time
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from cartpole_env import CartPoleEnv
-from dqn import DQN
+from ReinforcementLearning.BalanceStick_DeepQLearning.cartpole_env import CartPoleEnv
+from ReinforcementLearning.BalanceStick_DeepQLearning.dqn import DQN
 
 torch.set_default_dtype(torch.double)
 random.seed(0)
