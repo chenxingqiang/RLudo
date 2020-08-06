@@ -65,19 +65,28 @@ def main():
 
             #0. Currently you are in "state S (state)"
             #1.1 Determine action q values from state S.
+            qvalue = agent.forward(torch.from_numpy(state))
             #1.2 Calculate action to be taken from state S. Use 'e-rand off-policy'
+            greedy = torch.argmax(qvalue)
+            if (random.random() < epsilon):
+                action = random.randrange(0, 2)
+            else:
+                action = greedy
             #1.3 Play/perform the action in the environment
                 # Move to "next state S' (next_state), get reward, and flag for is game over (is new state terminal)
-  
-            pass
-            done = True #Update this flag correctly
+            nextstate, reward, done = env.step(int(action))
+            #Update this flag correctly
 
             #2.1 From state S' peek into the future - Determine action q values from state S'
-            #2.2 Using the SARSA-MAX formula update the net. 
+            with torch.no_grad():
+                future = agent.forward(torch.from_numpy(nextstate))
+                target = torch.tensor(qvalue)
+                target[action] = reward + GAMMA * torch.max(future)
+            #2.2 Using the SARSA-MAX formula update the net.
                 # Suggestion: You can start with formula: Q(S,A) <- R + gamma * max(Q(S',A'))
                 # Hint1: Don't forget that you should only perform update for taken action (#1.2)
                 # Hint2: Don't forget that the target is no_grad constant.
-            pass
+            agent.backward(qvalue, target)
 
             if done or (t == STEPS - 1):
                 print("episode: {}/{}, score: {}, e: {:.2}".format(episode, EPISODES, t, epsilon))

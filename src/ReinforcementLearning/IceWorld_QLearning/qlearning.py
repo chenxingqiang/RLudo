@@ -25,25 +25,28 @@ def main():
         
         # Loop over time-steps
         while not terminate:
-            # 0 Currently you are in "state S (state)"
-            # 1 Calculate action to be taken from state S. Use 'e-rand off-policy'
-                # 1.1 Compute what the greedy action for the current state is
-            pass
+
+            qvalue = qtable[state]
+            greedy = torch.argmax(qvalue)
+            if (random.random() < EPSILON):
+                action = random.randrange(env.action_space()[0])
+            else:
+                action = greedy
+
                 # 1.2 Sometimes, the agent takes a random action, to explore the environment
-            pass
 
             # 2 Perform the action
-            pass
+            nextstate, reward, terminate = env.step(action)
 
             # 3 Update the q-table
-            pass
+            td_error = reward + max(qtable[nextstate]) * GAMMA - qtable[state][action]
+            qtable[state][action] += td_error * LEARNING_RATE
 
             # 4 Update cumulative reward
-            pass
+            cumulative_reward += reward
 
             # 5 Make current state next state
-            pass
-            break
+            state = nextstate
 
         print(i, cumulative_reward)
 

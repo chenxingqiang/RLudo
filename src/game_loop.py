@@ -166,37 +166,26 @@ def draw_board(dim, state, env):
 
 
 def raw_loop(screen):
-    env = Ludo(4)
     screen.clear()
     curses.curs_set(0)
     init_colors()
     empty_board(4).refresh()
-    curses.napms(100)
-    curses.curs_set(1)
+
+    env = Ludo(4)
     game_end = False
-    agent1 = RandomPlayer()
-    agent2 = RandomPlayer()
-    agent3 = RandomPlayer()
-    agent4 = RandomPlayer()
+    agents = [RandomPlayer() for i in range(4)]
     state = env.current_state
     while not game_end:
-        roll = random.randrange(1, 7)
-        if env.current_player == 0:
-            action = agent1.play(state, TOKENS)
-        elif env.current_player == 1:
-            action = agent2.play(state, TOKENS)
-        elif env.current_player == 2:
-            action = agent3.play(state, TOKENS)
-        elif env.current_player == 3:
-            action = agent4.play(state, TOKENS)
-        else:
-            raise RuntimeError()
-        state, r, game_end = env.step(roll, action)
+        action = agents[env.current_player].play(state, TOKENS)
+        state, r, game_end = env.step(action)
         draw_board(4, state, env).refresh()
-        curses.napms(30)
+        curses.napms(10)
+    curses.curs_set(1)
     print('Player ', env.winning_player + 1, ' wins')
+
 
 
 def loop():
     curses.wrapper(raw_loop)
+    #raw_loop(None)
     return
