@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-class DQN(nn.Module):
+class NN1(nn.Module):
     def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size

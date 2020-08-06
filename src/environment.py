@@ -95,4 +95,6 @@ class Ludo(object):
     def env_space(self):
         #TODO
         return 4, 4
+    def board_length():
+        return BOARD_LENGTH
 
