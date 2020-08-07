@@ -38,3 +38,5 @@ class RLBasicPlayer(object):
     def recalculate_end(self):
         return
 
+    def reset(self):
+        return

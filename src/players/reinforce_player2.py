@@ -1,4 +1,4 @@
-from players.NeuralNets.reinforce import ReinforceAgent
+from players.NeuralNets.reinforce2 import ReinforceAgent2
 
 
 class ReinforcePlayer(object):
@@ -6,16 +6,12 @@ class ReinforcePlayer(object):
     def __init__(self, env):
         self.log_probs = []
         self.rewards = []
-        self.agent = ReinforceAgent(state_size=env.env_space(),
-                                    action_size=env.action_space())
+        self.agent = ReinforceAgent2(state_size=env.env_space(),
+                                     action_size=env.action_space())
         return
 
     def play(self, state, num_actions):
-
-        action, log_prob = self.agent.get_action(state)
-        self.log_probs.append(log_prob)
-
-        return action
+        return self.agent.get_action(state)
 
     def recalculate_step(self, _, reward):
         """
@@ -24,7 +20,7 @@ class ReinforcePlayer(object):
         :param reward:
         :return:
         """
-        self.rewards.append(reward)
+        self.agent.model.reward_episode.append(reward)
         return
 
     def recalculate_end(self):
@@ -32,10 +28,5 @@ class ReinforcePlayer(object):
         Once game is over recalculate everything
         :return:
         """
-        self.agent.backward(self.rewards, self.log_probs)
-        return
-
-    def reset(self):
-        self.log_probs = []
-        self.rewards = []
+        self.agent.backward()
         return

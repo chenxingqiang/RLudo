@@ -13,11 +13,14 @@ PLAYERS = 4
 def run_one_episode(state, agents):
     game_end = False
     env.reset(PLAYERS)
+    for agent in agents:
+        agent.reset()
     while not game_end:
         x = env.current_player
         action = agents[x].play(state, TOKENS)
         nextstate, reward, game_end = env.step(action)
         agents[x].recalculate_step(nextstate, reward)
+        state = nextstate
     for agent in agents:
         agent.recalculate_end()
 
@@ -29,7 +32,7 @@ if __name__ == '__main__':
     state = env.current_state()
 
     # Initialize agents to be trained
-    agents = [RLBasicPlayer(env) for i in range(PLAYERS)]
+    agents = [ReinforcePlayer(env) for i in range(PLAYERS)]
 
     # Train all agents
     for i in range(EPISODES):

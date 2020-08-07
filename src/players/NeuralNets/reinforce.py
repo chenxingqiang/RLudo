@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 
@@ -70,7 +69,7 @@ class ReinforceAgent(object):
         """
         Runs a state through NN to get action probabilities
         :param state: Current state
-        :return: Most probable action and log probabilities
+        :return: Most probable action and log probability
         """
         probs = self.forward(Variable(state))
         highest_prob_action = np.random.choice(self.num_actions, p=np.squeeze(probs.detach().numpy()))
