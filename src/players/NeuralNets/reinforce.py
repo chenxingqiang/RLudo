@@ -17,14 +17,14 @@ class ReinforceNet(nn.Module):
         h = 200
 
         self.neuralnet = nn.Sequential(
-            nn.Linear(self.state_size, h),
+            nn.Linear(state_size, h),
             nn.ReLU(),
             nn.Linear(h, h),
             nn.ReLU(),
-            nn.Linear(h, self.action_size))
+            nn.Linear(h, action_size))
 
     def forward(self, x):
-        return self.neuralnet(x)
+        return F.softmax(self.neuralnet(x))
 
 
 class ReinforceAgent(object):

@@ -13,5 +13,8 @@ class RandomPlayer(object):
     def play(self, _, num_actions):
         return self.random.randrange(0, num_actions)
 
-    def recalculate(self, *args):
+    def recalculate_step(self, *args):
+        return
+
+    def recalculate_end(self):
         return

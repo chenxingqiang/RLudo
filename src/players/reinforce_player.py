@@ -17,6 +17,20 @@ class ReinforcePlayer(object):
 
         return action
 
-    def recalculate(self, nextstate, reward):
+    def recalculate_step(self, _, reward):
+        """
+        Just stores reward for future recalculation
+        :param _:
+        :param reward:
+        :return:
+        """
         self.rewards.append(reward)
+        return
+
+    def recalculate_end(self):
+        """
+        Once game is over recalculate everything
+        :return:
+        """
+        self.agent.backward(self.rewards, self.log_probs)
         return

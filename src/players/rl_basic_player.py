@@ -28,10 +28,13 @@ class RLBasicPlayer(object):
         self.epsilon = self.epsilon * EPSILON_DECAY
         return self.action
 
-    def recalculate(self, nextstate, reward):
+    def recalculate_step(self, nextstate, reward):
         with torch.no_grad():
             future = self.agent.forward(nextstate)
             target = torch.tensor(self.qvalue)
             target[self.action] = reward + GAMMA * torch.max(future)
         self.agent.backward(self.qvalue, target)
+
+    def recalculate_end(self):
+        return
 

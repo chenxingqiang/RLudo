@@ -165,15 +165,17 @@ def draw_board(dim, state, env):
         window.addch(2 * dim + 2, 2 * dim + 2, PATH_CHAR, curses.color_pair(4))
     return window
 
+
 def raw_loop(screen):
     screen.clear()
     curses.curs_set(0)
     init_colors()
     empty_board(4).refresh()
     game_end = False
-    env=Ludo(PLAYERS)
-    global agents
-    if agents==None: agents = [RandomPlayer() for i in range(PLAYERS)]
+    env = Ludo(PLAYERS)
+    # global agents
+    # if agents==None:
+    agents = [RandomPlayer() for i in range(PLAYERS)]
     state = env.current_state
     while not game_end:
         action = agents[env.current_player].play(state, TOKENS)
@@ -185,10 +187,9 @@ def raw_loop(screen):
     print('Player ', env.winning_player + 1, ' wins')
 
 
-
 def loop(ag=None):
-    global agents
-    agents=ag
+    # global agents
+    # agents=ag
     curses.wrapper(raw_loop)
-    #raw_loop(None)
+    # raw_loop(None)
     return
