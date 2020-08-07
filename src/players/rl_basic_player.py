@@ -1,14 +1,14 @@
 import random
 import torch
-from players.dqn.dqn import DQNAgent
+from players.NeuralNets.dqn import DQNAgent
 
 GAMMA = 0.9
 
 # Epsilon
-EPSILON_START = 1.0
+EPSILON_START = 0.3
 EPSILON_DECAY = 1.0
 
-# TODO: Ovaj epsilon uopšte ne treba ovde da bude
+# TODO: Ovaj epsilon uopšte ne treba ovde da bude (valjda?)
 
 
 class RLBasicPlayer(object):
