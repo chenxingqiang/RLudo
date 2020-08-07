@@ -29,10 +29,11 @@ class Ludo(object):
         :return: Initial state
         """
         self.ply = 0
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.num_players = num_players
-        self.positions = torch.ones(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long) * (-1)
-        self.board_state = torch.zeros(BOARD_LENGTH, dtype=torch.long)
-        self.starts = torch.zeros(MAX_PLAYERS, dtype=torch.long)
+        self.positions = torch.ones(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long, device=self.device) * (-1)
+        self.board_state = torch.zeros(BOARD_LENGTH, dtype=torch.long, device=self.device)
+        self.starts = torch.zeros(MAX_PLAYERS, dtype=torch.long, device=self.device)
         if self.num_players == 2:
             self.starts[0] = 0
             self.starts[1] = 2 * START_DISTANCE
@@ -45,8 +46,8 @@ class Ludo(object):
             self.starts[1] = 2 * START_DISTANCE
             self.starts[2] = 1 * START_DISTANCE
             self.starts[3] = 3 * START_DISTANCE
-        self.passed = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long)
-        self.home_state = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long)
+        self.passed = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long, device=self.device)
+        self.home_state = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long, device=self.device)
         self.current_player = 0
         self.roll_dice()
 
@@ -113,7 +114,7 @@ class Ludo(object):
         :param action: Action to be performed
         :return: Returns tuple of next state, reward, and termination flag
         """
-        #print(self.ply)
+        # print(self.ply)
         reward, terminate = self.move(action)
         self.ply = self.ply + 1
         self.roll_dice()
@@ -130,7 +131,7 @@ class Ludo(object):
         Returns full current board state as a tensor
         :return: Tensor to be passes as input to nn
         """
-        dice_hot = torch.zeros(size=[DICE_MAX], dtype=torch.long)
+        dice_hot = torch.zeros(size=[DICE_MAX], dtype=torch.long, device=self.device)
         dice_hot[self.roll] = 1
         return torch.cat((self.board_state,
                           torch.flatten(self.home_state),
