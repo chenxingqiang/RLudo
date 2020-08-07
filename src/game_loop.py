@@ -10,6 +10,7 @@ PATH_CHAR = 'X'
 HOME_CHAR = 'O'
 PIECE_CHAR = 'P'
 TOKENS = 4
+PLAYERS = 4
 matrix = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
           [-1, -1, -1, -1, -1, 18, 19, 20, -1, -1, -1, -1, -1],
           [-1, -1, -1, -1, -1, 17, -1, 21, -1, -1, -1, -1, -1],
@@ -164,29 +165,30 @@ def draw_board(dim, state, env):
         window.addch(2 * dim + 2, 2 * dim + 2, PATH_CHAR, curses.color_pair(4))
     return window
 
-
 def raw_loop(screen):
     screen.clear()
     curses.curs_set(0)
     init_colors()
     empty_board(4).refresh()
-
-    env = Ludo(4)
     game_end = False
-    agents = [RandomPlayer() for i in range(4)]
+    env=Ludo(PLAYERS)
+    global agents
+    if agents==None: agents = [RandomPlayer() for i in range(PLAYERS)]
     state = env.current_state
     while not game_end:
         action = agents[env.current_player].play(state, TOKENS)
         _, r, game_end = env.step(action)
         state = env.current_state_as_tuple()
         draw_board(4, state, env).refresh()
-        curses.napms(10)
+        curses.napms(300)
     curses.curs_set(1)
     print('Player ', env.winning_player + 1, ' wins')
 
 
 
-def loop():
+def loop(ag=None):
+    global agents
+    agents=ag
     curses.wrapper(raw_loop)
     #raw_loop(None)
     return
