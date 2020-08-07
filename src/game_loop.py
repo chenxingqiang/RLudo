@@ -173,13 +173,14 @@ def raw_loop(screen):
     empty_board(4).refresh()
     game_end = False
     env = Ludo(PLAYERS)
-    # global agents
-    # if agents==None:
-    agents = [RandomPlayer() for i in range(PLAYERS)]
-    state = env.current_state
+    global agents
+    if agents==None:
+        agents = [RandomPlayer() for i in range(PLAYERS)]
+    pstate = env.current_state()
     while not game_end:
-        action = agents[env.current_player].play(state, TOKENS)
-        _, r, game_end = env.step(action)
+        action = agents[env.current_player].play(pstate, TOKENS)
+        pstate, r, game_end = env.step(action)
+        print(env.current_player)
         state = env.current_state_as_tuple()
         draw_board(4, state, env).refresh()
         curses.napms(300)
@@ -188,8 +189,8 @@ def raw_loop(screen):
 
 
 def loop(ag=None):
-    # global agents
-    # agents=ag
+    global agents
+    agents=ag
     curses.wrapper(raw_loop)
     # raw_loop(None)
     return

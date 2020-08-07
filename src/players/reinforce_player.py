@@ -3,7 +3,7 @@ import torch
 
 class ReinforcePlayer(object):
 
-    def __init__(self, env):
+    def __init__(self, env, read = None):
         self.log_probs = []
         self.rewards = []
         self.agent = ReinforceAgent(state_size=env.env_space(),

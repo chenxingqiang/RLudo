@@ -6,8 +6,8 @@ from game_loop import loop
 import random
 
 TOKENS = 4
-TRAIN_EPISODES = 10
-TEST_EPISODES = 1
+TRAIN_EPISODES = 0
+TEST_EPISODES = 100
 PLAYERS = 4
 
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     state = env.current_state()
 
     # Initialize agents to be trained
-    agents = [RLBasicPlayer(env) for i in range(PLAYERS)]
+    agents = [RLBasicPlayer(env,"players\saves\RLBasic1500.pth") for i in range(PLAYERS)]
 
     # Train all agents
     for i in range(TRAIN_EPISODES):
@@ -46,13 +46,13 @@ if __name__ == '__main__':
     win = 0
     agents[0].epsilon = 0
     for i in range(1, PLAYERS):
-        agents[i] = RandomPlayer()
+        agents[i] = ReinforcePlayer(env,"players\saves\Reinforce5000.pth")
 
     # Test first agent vs randoms
     for i in range(TEST_EPISODES):
         run_one_episode(state, agents, False)
-        if env.winning_player == 1:
+        if env.winning_player == 0:
             win += 1
-    #loop(agents)
-    agents[0].save("players\saves\RLBasic10.pth")
+    loop(agents)
+    #agents[0].save("players\saves\RLBasic1500.pth")
     print('winrate ', win / TEST_EPISODES)

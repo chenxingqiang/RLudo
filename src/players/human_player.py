@@ -1,5 +1,5 @@
 import random
-
+import curses
 
 class RandomPlayer(object):
 
