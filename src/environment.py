@@ -19,7 +19,8 @@ LOSE_REWARD = -100
 # TERMINAL = {' ': False, '*': True, 'T': False, 'G': True}
 
 class Ludo(object):
-    def __init__(self, num_players):
+    def __init__(self, num_players,agents=None):
+        self.agents=agents
         self.reset(num_players)
 
     def reset(self, num_players):

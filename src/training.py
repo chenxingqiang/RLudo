@@ -1,69 +1,53 @@
 from environment import Ludo
 from players.rl_basic_player import RLBasicPlayer
 from players.random_player import RandomPlayer
+from game_loop import loop
 import random
 
 TOKENS = 4
-EPISODES = 100
-PLAYERS = 2
+EPISODES = 10
+PLAYERS = 4
 
-def iterate(state, agent1, agent2,agent3=None,agent4=None):
+def iterate(state, agents):
     game_end = False
     env.reset(PLAYERS)
     while not game_end:
         x = env.current_player
-        if x == 0:
-            action = agent1.play(state, TOKENS)
-        if x == 1:
-            action = agent2.play(state, TOKENS)
-        if x == 2:
-            action = agent3.play(state, TOKENS)
-        if x == 3:
-            action = agent4.play(state, TOKENS)
+        action=agents[x].play(state,TOKENS)
         nextstate, reward, game_end = env.step(action)
-        if x == 0:
-            agent1.recalculate(nextstate, reward)
-        if x == 1:
-            agent2.recalculate(nextstate, reward)
-        if x == 2:
-            agent3.recalculate(nextstate, reward)
-        if x == 3:
-            agent4.recalculate(nextstate, reward)
+        agents[x].recalculate(nextstate, reward)
 
 
 if __name__ == '__main__':
     env = Ludo(PLAYERS)
     if PLAYERS==2:
-        agent1 = RLBasicPlayer(env)
-        agent2 = RLBasicPlayer(env)
+        agents = [RLBasicPlayer(env) for i in range(2)]
         state = env.current_state()
         for i in range(EPISODES):
-            iterate(state, agent1, agent2)
+            iterate(state, agents)
             print('Episode ' + str(i) + ': Player ', env.winning_player + 1, ' wins')
-        win = 1
-        agent1.epsilon=0
-        agentr = RandomPlayer()
+        win = 0
+        agents[0].epsilon=0
+        agents[1] = RandomPlayer()
         for i in range(EPISODES):
-            iterate(state, agent1, agentr)
+            iterate(state, agents)
             if env.winning_player == 1:
                 win += 1
         print('winrate ', win / EPISODES)
     if PLAYERS==4:
-        agent1 = RLBasicPlayer(env)
-        agent2 = RLBasicPlayer(env)
-        agent3 = RLBasicPlayer(env)
-        agent4 = RLBasicPlayer(env)
+        agents = [RLBasicPlayer(env) for i in range(4)]
         state = env.current_state()
         for i in range(EPISODES):
-            iterate(state, agent1, agent2, agent3, agent4)
+            iterate(state, agents)
             print('Episode ' + str(i) + ': Player ', env.winning_player + 1, ' wins')
         win = 0
-        agent1.epsilon=0
-        agentr1 = RandomPlayer()
-        agentr2 = RandomPlayer()
-        agentr3 = RandomPlayer()
+        agents[0].epsilon=0
+        agents[1]=RandomPlayer()
+        agents[2]=RandomPlayer()
+        agents[3]=RandomPlayer()
         for i in range(EPISODES):
-            iterate(state, agent1, agentr1, agentr2, agentr3)
+            iterate(state, agents)
             if env.winning_player == 1:
                 win += 1
+        for i in range(5): loop(agents)
         print('winrate ', win / EPISODES)
