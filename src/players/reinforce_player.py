@@ -1,5 +1,5 @@
 from players.NeuralNets.reinforce import ReinforceAgent
-
+import torch
 
 class ReinforcePlayer(object):
 
@@ -8,6 +8,9 @@ class ReinforcePlayer(object):
         self.rewards = []
         self.agent = ReinforceAgent(state_size=env.env_space(),
                                     action_size=env.action_space())
+        if not read == None:
+            self.agent.model.load_state_dict(torch.load(read))
+            self.agent.model.eval()
         return
 
     def play(self, state, num_actions):
@@ -41,3 +44,6 @@ class ReinforcePlayer(object):
         self.log_probs = []
         self.rewards = []
         return
+
+    def save(self,path):
+        torch.save(self.agent.model.state_dict(), path)

@@ -13,9 +13,12 @@ EPSILON_DECAY = 1.0
 
 class RLBasicPlayer(object):
 
-    def __init__(self, env):
+    def __init__(self, env, read = None):
         self.agent = DQNAgent(state_size=env.env_space(),
                               action_size=env.action_space())
+        if not read == None:
+            self.agent.model.load_state_dict(torch.load(read))
+            self.agent.model.eval()
         self.epsilon = EPSILON_START
 
     def play(self, state, num_actions):
@@ -41,3 +44,6 @@ class RLBasicPlayer(object):
 
     def reset(self):
         return
+
+    def save(self,path):
+        torch.save(self.agent.model.state_dict(), path)

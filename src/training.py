@@ -7,7 +7,7 @@ import random
 
 TOKENS = 4
 TRAIN_EPISODES = 10
-TEST_EPISODES = 25
+TEST_EPISODES = 1
 PLAYERS = 4
 
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     state = env.current_state()
 
     # Initialize agents to be trained
-    agents = [ReinforcePlayer(env) for i in range(PLAYERS)]
+    agents = [RLBasicPlayer(env) for i in range(PLAYERS)]
 
     # Train all agents
     for i in range(TRAIN_EPISODES):
@@ -54,4 +54,5 @@ if __name__ == '__main__':
         if env.winning_player == 1:
             win += 1
     #loop(agents)
+    agents[0].save("players\saves\RLBasic10.pth")
     print('winrate ', win / TEST_EPISODES)
