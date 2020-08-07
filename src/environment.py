@@ -69,7 +69,7 @@ class Ludo(object):
         player = self.current_player
         playable = (torch.sum(self.positions[player]) != -TOKENS_PER_PLAYER)
 
-        print(self.board_state,self.roll,self.current_player,action)
+        # print(self.board_state,self.roll,self.current_player,action)
 
         # ukoliko nije dobio sesticu, menja se na sledeceg igraca
         if not self.roll == DICE_MAX - 1:
@@ -198,3 +198,16 @@ class Ludo(object):
         :return: reward for losing the game
         """
         return None if player == self.winning_player else LOSE_REWARD
+
+    def is_action_valid(self, action):
+        """
+        Returns whether given action is a valid move for current player
+        :param action: Action to be checked
+        :return: Boolean flag
+        """
+        if self.home_state[self.current_player, action] == 1:
+            return False
+        pos = self.positions[self.current_player, action]
+        if self.positions[self.current_player, action] == -1:
+            return self.roll == DICE_MAX - 1
+        return self.board_state[(pos + self.roll - 1) % BOARD_LENGTH] != self.current_player + 1
