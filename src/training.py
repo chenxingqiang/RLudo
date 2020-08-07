@@ -6,11 +6,12 @@ from game_loop import loop
 import random
 
 TOKENS = 4
-EPISODES = 100
+TRAIN_EPISODES = 10
+TEST_EPISODES = 25
 PLAYERS = 4
 
 
-def run_one_episode(state, agents):
+def run_one_episode(state, agents, train):
     game_end = False
     env.reset(PLAYERS)
     for agent in agents:
@@ -19,15 +20,17 @@ def run_one_episode(state, agents):
         x = env.current_player
         action = agents[x].play(state, TOKENS)
         nextstate, reward, game_end = env.step(action)
-        agents[x].recalculate_step(nextstate, reward)
+        if train:
+            agents[x].recalculate_step(nextstate, reward)
         state = nextstate
-    for agent in agents:
-        agent.recalculate_end()
+    if train:
+        for i in range(len(agents)):
+            agents[i].recalculate_end(env.lose_reward(i))
 
 
 if __name__ == '__main__':
 
-    #Initialize environment
+    # Initialize environment
     env = Ludo(PLAYERS)
     state = env.current_state()
 
@@ -35,8 +38,8 @@ if __name__ == '__main__':
     agents = [ReinforcePlayer(env) for i in range(PLAYERS)]
 
     # Train all agents
-    for i in range(EPISODES):
-        run_one_episode(state, agents)
+    for i in range(TRAIN_EPISODES):
+        run_one_episode(state, agents, True)
         print('Episode ' + str(i) + ': Player ', env.winning_player + 1, ' wins')
 
     # Initialize agents for test
@@ -46,9 +49,9 @@ if __name__ == '__main__':
         agents[i] = RandomPlayer()
 
     # Test first agent vs randoms
-    for i in range(EPISODES):
-        run_one_episode(state, agents)
+    for i in range(TEST_EPISODES):
+        run_one_episode(state, agents, False)
         if env.winning_player == 1:
             win += 1
-    loop(agents)
-    print('winrate ', win / EPISODES)
+    #loop(agents)
+    print('winrate ', win / TEST_EPISODES)

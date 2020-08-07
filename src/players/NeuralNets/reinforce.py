@@ -7,20 +7,21 @@ from torch.autograd import Variable
 # Constants
 GAMMA = 0.9
 LR = 0.003
+DROPOUT = 0.6
 
 
 class ReinforceNet(nn.Module):
     def __init__(self, state_size, action_size):
         super(ReinforceNet, self).__init__()
 
-        h = 200
-
         self.neuralnet = nn.Sequential(
-            nn.Linear(state_size, h),
+            nn.Linear(state_size, 200),
+            nn.Dropout(p=DROPOUT),
             nn.ReLU(),
-            nn.Linear(h, h),
+            nn.Linear(200, 30),
+            nn.Dropout(p=DROPOUT),
             nn.ReLU(),
-            nn.Linear(h, action_size))
+            nn.Linear(30, action_size))
 
     def forward(self, x):
         return F.softmax(self.neuralnet(x))

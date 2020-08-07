@@ -35,7 +35,8 @@ class RLBasicPlayer(object):
             target[self.action] = reward + GAMMA * torch.max(future)
         self.agent.backward(self.qvalue, target)
 
-    def recalculate_end(self):
+    def recalculate_end(self, _):
+
         return
 
     def reset(self):

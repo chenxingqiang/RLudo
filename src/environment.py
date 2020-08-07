@@ -19,8 +19,8 @@ LOSE_REWARD = -100
 # TERMINAL = {' ': False, '*': True, 'T': False, 'G': True}
 
 class Ludo(object):
-    def __init__(self, num_players,agents=None):
-        self.agents=agents
+    def __init__(self, num_players, agents=None):
+        self.agents = agents
         self.reset(num_players)
 
     def reset(self, num_players):
@@ -29,11 +29,10 @@ class Ludo(object):
         :param num_players: Number of players
         :return: Initial state
         """
-        
+
         if torch.cuda.is_available():
             torch.cuda.set_device("cuda:0")
             print("Running on GPU")
-
 
         self.ply = 0
         self.num_players = num_players
@@ -69,48 +68,68 @@ class Ludo(object):
         terminate = False
         player = self.current_player
         playable = (torch.sum(self.positions[player]) != -TOKENS_PER_PLAYER)
-        if self.home_state[player, action]: #Ilegalan potez, pomeranje figurice koja je vec na cilju
+
+        # Ilegalan potez, pomeranje figurice koja je vec na cilju
+        if self.home_state[player, action]:
             return ILLEGAL_MOVE_REWARD, terminate
-        if not playable and self.running_total<3 and not self.roll==DICE_MAX-1: #Bacanje do 3 puta ako nema nista na tabli
-            self.running_total+=1
+
+        # Bacanje do 3 puta ako nema nista na tabli
+        if not playable and self.running_total < 3 and not self.roll == DICE_MAX - 1:
+            self.running_total += 1
             return 0, terminate
-        self.running_total=1
-        if not self.roll == DICE_MAX - 1: #ukoliko nije dobio sesticu, menja se na sledeceg igraca
+        self.running_total = 1
+
+        # ukoliko nije dobio sesticu, menja se na sledeceg igraca
+        if not self.roll == DICE_MAX - 1:
             self.current_player += 1
             self.current_player %= self.num_players
         cur = self.positions[player, action]
-        if cur == -1: #Figurica nije jos usla u igru
-            if self.roll == DICE_MAX - 1: #Bacena sestica; figurica ulazi u igru
-                if not self.board_state[self.starts[player]] == 0: #Ilegalan potez, pomeranje figurice koja je vec na cilju
+
+        # Figurica nije jos usla u igru
+        if cur == -1:
+            # Bacena sestica; figurica ulazi u igru
+            if self.roll == DICE_MAX - 1:
+                # Ilegalan potez, pomeranje figurice koja je vec na cilju
+                if not self.board_state[self.starts[player]] == 0:
                     return ILLEGAL_MOVE_REWARD, terminate
                 nxt = self.starts[player]
                 delta = 1
-            elif playable: #Ilegalan potez, uzaludno pomeranje figurice koja nije u igri, dok postoji drugih poteza
+            # Ilegalan potez, uzaludno pomeranje figurice koja nije u igri, dok postoji drugih poteza
+            elif playable:
                 return ILLEGAL_MOVE_REWARD, terminate
             else:
                 return 0, terminate
-        else: #pomera figuricu i igri
+        # pomera figuricu i igra
+        else:
             nxt = self.positions[player, action] + self.roll
             nxt %= BOARD_LENGTH
             delta = self.roll
         reward = 0
-        if self.passed[player, action] + delta >= BOARD_LENGTH: #Ako je presao celu tablu
+
+        # Ako je presao celu tablu
+        if self.passed[player, action] + delta >= BOARD_LENGTH:
             self.board_state[self.positions[player, action]] = 0
             self.positions[player, action] = -1
             self.home_state[player, action] = 1
-            if torch.sum(self.home_state[player]) == TOKENS_PER_PLAYER: #Sve figurice su stigle na kraj; kraj igre
+            # Sve figurice su stigle na kraj; kraj igre
+            if torch.sum(self.home_state[player]) == TOKENS_PER_PLAYER:
                 terminate = True
                 self.winning_player = player
                 return WIN_REWARD, terminate
             self.roll_dice()
             return 0, terminate
-        if (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER == player and not self.board_state[nxt] == 0: #Ilegalan potez, zavrsio na polju koje je vec zauzeto od strane svoje figure
+
+        # Ilegalan potez, zavrsio na polju koje je vec zauzeto od strane svoje figure
+        if (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER == player \
+                and not self.board_state[nxt] == 0:
             return ILLEGAL_MOVE_REWARD, terminate
-        if not self.board_state[nxt] == 0: #Na polju gde se nalazi vec stoji protivnicka figurica, ona se jede
-            self.positions[
-                (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER, (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = -1
-            self.passed[
-                (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER, (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = 0
+
+        # Na polju gde se nalazi vec stoji protivnicka figurica, ona se jede
+        if not self.board_state[nxt] == 0:
+            self.positions[(self.board_state[nxt] - 1) // TOKENS_PER_PLAYER,
+                           (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = -1
+            self.passed[(self.board_state[nxt] - 1) // TOKENS_PER_PLAYER,
+                        (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = 0
         self.passed[player, action] += delta
         self.board_state[self.positions[player, action]] = 0
         self.positions[player, action] = nxt
@@ -141,9 +160,11 @@ class Ludo(object):
         Returns full current board state as a tensor
         :return: Tensor to be passes as input to nn
         """
+        # Yeet način da se one-hotuje board state
+        board_hot = torch.cat([(((self.board_state + 3) // 4) == i + 1).long() for i in range(MAX_PLAYERS)])
         dice_hot = torch.zeros(size=[DICE_MAX], dtype=torch.long)
         dice_hot[self.roll] = 1
-        return torch.cat((self.board_state,
+        return torch.cat((board_hot,
                           torch.flatten(self.home_state),
                           dice_hot)).float()
 
@@ -155,7 +176,7 @@ class Ludo(object):
         Total number of parameters representing a state
         :return: Integer
         """
-        return BOARD_LENGTH + MAX_PLAYERS * TOKENS_PER_PLAYER + DICE_MAX
+        return MAX_PLAYERS * (TOKENS_PER_PLAYER + BOARD_LENGTH) + DICE_MAX
 
     def board_length(self):
         return BOARD_LENGTH
@@ -167,3 +188,11 @@ class Ludo(object):
         """
         self.roll = random.randrange(0, DICE_MAX)
         return
+
+    def lose_reward(self, player):
+        """
+        Returns lose reward if player lost, otherwise None
+        :param player: player id
+        :return: reward for losing the game
+        """
+        return None if player == self.winning_player else LOSE_REWARD

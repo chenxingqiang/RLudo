@@ -27,11 +27,13 @@ class ReinforcePlayer(object):
         self.rewards.append(reward)
         return
 
-    def recalculate_end(self):
+    def recalculate_end(self, reward):
         """
         Once game is over recalculate everything
         :return:
         """
+        if reward:
+            self.rewards.append(reward)
         self.agent.backward(self.rewards, self.log_probs)
         return
 
