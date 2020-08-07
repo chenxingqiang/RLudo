@@ -177,7 +177,8 @@ def raw_loop(screen):
     state = env.current_state
     while not game_end:
         action = agents[env.current_player].play(state, TOKENS)
-        state, r, game_end = env.step(action)
+        _, r, game_end = env.step(action)
+        state = env.current_state_as_tuple()
         draw_board(4, state, env).refresh()
         curses.napms(10)
     curses.curs_set(1)
