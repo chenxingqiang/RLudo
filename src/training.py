@@ -6,7 +6,7 @@ from game_loop import loop
 import random
 
 TOKENS = 4
-EPISODES = 10
+EPISODES = 100
 PLAYERS = 4
 
 
@@ -50,6 +50,5 @@ if __name__ == '__main__':
         run_one_episode(state, agents)
         if env.winning_player == 1:
             win += 1
-        # for i in range(5):
-        #    loop(agents)
+    loop(agents)
     print('winrate ', win / EPISODES)

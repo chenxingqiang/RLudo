@@ -55,6 +55,7 @@ class Ludo(object):
         self.passed = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long)
         self.home_state = torch.zeros(size=(MAX_PLAYERS, TOKENS_PER_PLAYER), dtype=torch.long)
         self.current_player = 0
+        self.running_total = 1
         self.roll_dice()
 
         return self.current_state()
@@ -67,42 +68,45 @@ class Ludo(object):
         """
         terminate = False
         player = self.current_player
-        # TODO: U prvom krugu se kockica baca 3 puta dok se ne izađe
-        if not self.roll == DICE_MAX - 1:
+        playable = (torch.sum(self.positions[player]) != -TOKENS_PER_PLAYER)
+        if self.home_state[player, action]: #Ilegalan potez, pomeranje figurice koja je vec na cilju
+            return ILLEGAL_MOVE_REWARD, terminate
+        if not playable and self.running_total<3 and not self.roll==DICE_MAX-1: #Bacanje do 3 puta ako nema nista na tabli
+            self.running_total+=1
+            return 0, terminate
+        self.running_total=1
+        if not self.roll == DICE_MAX - 1: #ukoliko nije dobio sesticu, menja se na sledeceg igraca
             self.current_player += 1
             self.current_player %= self.num_players
-        if self.home_state[player, action]:
-            return -100, terminate
-        playable = (torch.sum(self.positions[player]) == -TOKENS_PER_PLAYER)
         cur = self.positions[player, action]
-        if cur == -1:
-            if self.roll == DICE_MAX - 1:
-                if not self.board_state[self.starts[player]] == 0:
-                    return -100, terminate
+        if cur == -1: #Figurica nije jos usla u igru
+            if self.roll == DICE_MAX - 1: #Bacena sestica; figurica ulazi u igru
+                if not self.board_state[self.starts[player]] == 0: #Ilegalan potez, pomeranje figurice koja je vec na cilju
+                    return ILLEGAL_MOVE_REWARD, terminate
                 nxt = self.starts[player]
                 delta = 1
-            elif playable:
-                return -100, terminate
+            elif playable: #Ilegalan potez, uzaludno pomeranje figurice koja nije u igri, dok postoji drugih poteza
+                return ILLEGAL_MOVE_REWARD, terminate
             else:
                 return 0, terminate
-        else:
+        else: #pomera figuricu i igri
             nxt = self.positions[player, action] + self.roll
             nxt %= BOARD_LENGTH
             delta = self.roll
         reward = 0
-        if self.passed[player, action] + delta >= BOARD_LENGTH:
+        if self.passed[player, action] + delta >= BOARD_LENGTH: #Ako je presao celu tablu
             self.board_state[self.positions[player, action]] = 0
             self.positions[player, action] = -1
             self.home_state[player, action] = 1
-            if torch.sum(self.home_state[player]) == TOKENS_PER_PLAYER:
+            if torch.sum(self.home_state[player]) == TOKENS_PER_PLAYER: #Sve figurice su stigle na kraj; kraj igre
                 terminate = True
                 self.winning_player = player
                 return WIN_REWARD, terminate
             self.roll_dice()
             return 0, terminate
-        if (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER == player and not self.board_state[nxt] == 0:
-            return -100, terminate
-        if not self.board_state[nxt] == 0:
+        if (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER == player and not self.board_state[nxt] == 0: #Ilegalan potez, zavrsio na polju koje je vec zauzeto od strane svoje figure
+            return ILLEGAL_MOVE_REWARD, terminate
+        if not self.board_state[nxt] == 0: #Na polju gde se nalazi vec stoji protivnicka figurica, ona se jede
             self.positions[
                 (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER, (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = -1
             self.passed[
