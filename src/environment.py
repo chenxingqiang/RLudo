@@ -29,8 +29,10 @@ class Ludo(object):
         :return: Initial state
         """
         
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        torch.cuda.set_device(device)
+        if torch.cuda.is_available():
+            torch.cuda.set_device("cuda:0")
+            print("Running on GPU")
+
 
         self.ply = 0
         self.num_players = num_players

@@ -33,7 +33,7 @@ def iterate(state, agent1, agent2,agent3=None,agent4=None):
 
 if __name__ == '__main__':
     env = Ludo(PLAYERS)
-    if PLAYERS==2:
+    if PLAYERS == 2:
         agent1 = RLBasicPlayer(env)
         agent2 = RLBasicPlayer(env)
         state = env.current_state()
@@ -48,7 +48,7 @@ if __name__ == '__main__':
             if env.winning_player == 1:
                 win += 1
         print('winrate ', win / EPISODES)
-    if PLAYERS==4:
+    if PLAYERS == 4:
         agent1 = RLBasicPlayer(env)
         agent2 = RLBasicPlayer(env)
         agent3 = RLBasicPlayer(env)
@@ -58,7 +58,7 @@ if __name__ == '__main__':
             iterate(state, agent1, agent2, agent3, agent4)
             print('Episode ' + str(i) + ': Player ', env.winning_player + 1, ' wins')
         win = 0
-        agent1.epsilon=0
+        agent1.epsilon = 0
         agentr1 = RandomPlayer()
         agentr2 = RandomPlayer()
         agentr3 = RandomPlayer()

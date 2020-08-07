@@ -11,23 +11,67 @@ LR = 0.003
 
 
 class ReinforceNet(nn.Module):
-    def __init__(self, num_inputs, num_actions):
+    def __init__(self, state_size, action_size):
         super(ReinforceNet, self).__init__()
 
-        hidden_size = 200
+        h = 200
 
-        self.num_actions = num_actions
-        self.linear1 = nn.Linear(num_inputs, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, num_actions)
-        self.optimizer = optim.Adam(self.parameters(), lr=LR)
+        self.neuralnet = nn.Sequential(
+            nn.Linear(self.state_size, h),
+            nn.ReLU(),
+            nn.Linear(h, h),
+            nn.ReLU(),
+            nn.Linear(h, self.action_size))
 
-    def forward(self, state):
-        x = F.relu(self.linear1(state))
-        x = F.softmax(self.linear2(x), dim=1)
-        return x
+    def forward(self, x):
+        return self.neuralnet(x)
+
+
+class ReinforceAgent(object):
+    def __init__(self, state_size, action_size):
+        self.model = ReinforceNet(state_size, action_size)
+        self.num_actions = action_size
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LR)
+
+    def forward(self, x):
+        return self.model(x)
+
+    def backward(self, rewards, log_probs):
+        """
+        Implements the REINFORCE algorithm for policy gradient.
+        :param rewards: Reward history
+        :param log_probs: Log-prob history
+        :return: None
+        """
+        discounted_rewards = []
+
+        for t in range(len(rewards)):
+            gt = 0
+            pw = 0
+            for r in rewards[t:]:
+                gt = gt + GAMMA ** pw * r
+                pw = pw + 1
+            discounted_rewards.append(gt)
+
+        discounted_rewards = torch.tensor(discounted_rewards)
+        discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (
+                    discounted_rewards.std() + 1e-9)  # normalize discounted rewards
+
+        policy_gradient = []
+        for log_prob, gt in zip(log_probs, discounted_rewards):
+            policy_gradient.append(-log_prob * gt)
+
+        self.optimizer.zero_grad()
+        policy_gradient = torch.stack(policy_gradient).sum()
+        policy_gradient.backward()
+        self.optimizer.step()
 
     def get_action(self, state):
-        state = torch.from_numpy(state).float().unsqueeze(0)
+        """
+        Runs a state through NN to get action probabilities
+        :param state: Current state
+        :return: Most probable action and log probabilities
+        """
         probs = self.forward(Variable(state))
         highest_prob_action = np.random.choice(self.num_actions, p=np.squeeze(probs.detach().numpy()))
         log_prob = torch.log(probs.squeeze(0)[highest_prob_action])
