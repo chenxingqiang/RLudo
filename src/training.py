@@ -52,7 +52,7 @@ if __name__ == '__main__':
     # Test first agent vs randoms
     for i in range(TEST_EPISODES):
         run_one_episode(state, agents, False)
-        if env.winning_player == 1:
+        if env.winning_player == 0:
             win += 1
     print('winrate ', win / TEST_EPISODES)
     #loop(agents)
