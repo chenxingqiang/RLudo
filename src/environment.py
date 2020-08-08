@@ -230,7 +230,7 @@ class Ludo(object):
         pos = self.positions[self.current_player, action]
         if self.positions[self.current_player, action] == -1:
             return self.roll == DICE_MAX - 1
-        return self.board_state[(pos + self.roll - 1) % BOARD_LENGTH] != self.current_player + 1
+        return (self.board_state[(pos + self.roll + 1) % BOARD_LENGTH]  - 1)//TOKENS_PER_PLAYER != self.current_player
 
     def dolaze_po_mene(self, action):
         """

@@ -62,7 +62,7 @@ def empty_board(dim):
 
 
 def draw_board(dim, state, env):
-    window = curses.newwin(2 * dim + 7, 2 * dim + 30)
+    window = curses.newwin(2 * dim + 8, 2 * dim + 30)
 
     for i in range(dim + 1, dim + 4):
         for j in range(1, 2 * dim + 4):
@@ -171,7 +171,7 @@ def draw_board(dim, state, env):
     return window
 
 def human_board(dim, state, env,player):
-    window = curses.newwin(2 * dim + 7, 2 * dim + 30)
+    window = curses.newwin(2 * dim + 8, 2 * dim + 30)
     PIECE=[['a' for j in range(TOKENS)] for i in range(PLAYERS)]
     for i in range(PLAYERS):
         for j in range(TOKENS):
@@ -313,10 +313,14 @@ def raw_loop(screen):
             window.addstr(2*4+5,8,'je na potezu')
             window.addstr(2*4+6,0,'Na kocki je bacen broj ')
             window.addstr(2*4+6,23,str(env.roll+1))
-            window.refresh()
-            curses.napms(30)
-            c = window.getch()
-            action=agents[env.current_player].play(c)
+            while True:
+                window.refresh()
+                curses.napms(30)
+                c = window.getch()
+                action=agents[env.current_player].play(c)
+                if not action == -1:
+                    break
+                window.addstr(2*4+7,0,'Morate odigrati validan potez')
         else:
             action = agents[env.current_player].play(pstate, TOKENS)
         pstate, r, game_end = env.step(action)
