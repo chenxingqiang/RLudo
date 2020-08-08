@@ -3,6 +3,7 @@ from players.rl_basic_player import RLBasicPlayer
 from players.random_player import RandomPlayer
 from players.ivan_pesic import IvanPesic
 from players.reinforce_player import ReinforcePlayer
+from players.ivan_pesic import IvanPesic
 from game_loop import loop
 import random
 
@@ -36,7 +37,8 @@ if __name__ == '__main__':
     state = env.current_state()
 
     # Initialize agents to be trained
-    agents = [RLBasicPlayer(env, "players/saves/RLBasic10.pth") for i in range(PLAYERS)]
+    agents = [RLBasicPlayer(env) for i in range(PLAYERS)]
+
 
     # Train all agents
     for i in range(TRAIN_EPISODES):
@@ -52,8 +54,11 @@ if __name__ == '__main__':
     # Test first agent vs randoms
     for i in range(TEST_EPISODES):
         run_one_episode(state, agents, False)
-        if env.winning_player == 0:
+        if env.winning_player == 1:
             win += 1
+    #loop(agents)
+    agents[0].save("players\saves\RLBasic10.pth")
+
     print('winrate ', win / TEST_EPISODES)
     #loop(agents)
     #agents[0].save("players\saves\RLBasic1500.pth")
