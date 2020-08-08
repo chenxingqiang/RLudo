@@ -10,29 +10,30 @@ LR = 0.003
 GAMMA = 0.9
 
 class GCN(nn.Module):
-    def __init__(self, nfeat, nclass):
+    def __init__(self, nnode, nfeat, nclass):
         super(GCN, self).__init__()
 
         h = 8
-        self.gc1 = GraphConvolution(nfeat, h)
-        self.gc2 = GraphConvolution(h, nclass)
+        self.gc = GraphConvolution(nfeat, h)
+        self.ln = nn.Linear(nnode*h, nclass)
 
     def forward(self, x, adj):
-        x = F.relu(self.gc1(x, adj))
+        x = F.relu(self.gc(x, adj))
         x = F.dropout(x, DROPOUT, training=self.training)
-        x = self.gc2(x, adj)
-        return F.log_softmax(x, dim=1)
+        x = torch.flatten(x)
+        x = self.ln(x)
+        return F.softmax(x)
 
 
 
 class GraphAgent(object):
-    def __init__(self, state_size, action_size):
-        self.model = GCN(state_size, action_size)
+    def __init__(self, nnode, nfeat, action_size):
+        self.model = GCN(nnode, nfeat, action_size)
         self.num_actions = action_size
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LR)
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, x, adj):
+        return self.model(x, adj)
 
     def backward(self, rewards, log_probs):
         """
@@ -64,13 +65,13 @@ class GraphAgent(object):
         policy_gradient.backward()
         self.optimizer.step()
 
-    def get_action(self, state):
+    def get_action(self, state, adj):
         """
         Runs a state through NN to get action probabilities
         :param state: Current state
         :return: Most probable action and log probability
         """
-        probs = self.forward(Variable(state))
+        probs = self.forward(Variable(state), adj)
         highest_prob_action = np.random.choice(self.num_actions, p=np.squeeze(probs.detach().numpy()))
         log_prob = torch.log(probs.squeeze(0)[highest_prob_action])
         return highest_prob_action, log_prob

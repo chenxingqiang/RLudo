@@ -37,7 +37,7 @@ if __name__ == '__main__':
     state = env.current_state()
 
     # Initialize agents to be trained
-    agents = [ReinforcePlayer(env) for i in range(PLAYERS)]
+    agents = [GraphPlayer(env) for i in range(PLAYERS)]
 
     # Train all agents
     for i in range(TRAIN_EPISODES):

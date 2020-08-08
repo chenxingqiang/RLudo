@@ -1,6 +1,7 @@
 import random
 import torch
 import torch.sparse
+import math
 
 START_DISTANCE = 10
 MAX_PLAYERS = 4
@@ -26,6 +27,7 @@ class Ludo(object):
     def __init__(self, num_players, agents=None):
         self.agents = agents
         self.reset(num_players)
+        self.adj = self.sparse_normed_adjacency()
 
     def reset(self, num_players):
         """
@@ -36,7 +38,6 @@ class Ludo(object):
 
         if torch.cuda.is_available():
             torch.cuda.set_device("cuda:0")
-            print("Running on GPU")
 
         self.ply = 0
         self.num_players = num_players
@@ -73,7 +74,7 @@ class Ludo(object):
         player = self.current_player
         playable = (torch.sum(self.positions[player]) != -TOKENS_PER_PLAYER)
         # print(self.board_state,self.roll,self.current_player,action)
-        print(player)
+        # print(player)
         # ukoliko nije dobio sesticu, menja se na sledeceg igraca
         if not self.roll == DICE_MAX - 1:
             self.current_player += 1
@@ -270,9 +271,7 @@ class Ludo(object):
         return False
 
     def ilja_mode(self, action):
-        """
-        ATTACK HEURISTIC
-        """
+        """ ATTACK HEURISTIC """
         my_pos = self.positions[self.current_player, action]
         if my_pos == -1:
             if self.roll != DICE_MAX - 1:
@@ -298,7 +297,7 @@ class Ludo(object):
         values = x[tuple(indices[i] for i in range(indices.shape[0]))]
         return sparse_tensortype(indices, values, x.size())
 
-    def sparse_adjacency(self):
+    def sparse_normed_adjacency(self):
         """
         Precalculating adjacency matrix for graph nn.
         Ones on the diagonal are known to improve stability.
@@ -309,6 +308,10 @@ class Ludo(object):
             for j in range(BOARD_LENGTH):
                 if abs(i - j) <= DICE_MAX:
                     adjmat[i, j] = 1
+        # For our needs this can be simplified
+        deg = torch.eye(BOARD_LENGTH) / math.sqrt(2*DICE_MAX)
+        adjmat = torch.mm(deg, adjmat)
+        adjmat = torch.mm(adjmat, deg)
         return self.to_sparse(adjmat)
 
     def features_matrix(self):

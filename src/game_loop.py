@@ -6,7 +6,7 @@ from players.random_player import RandomPlayer
 from players.rl_basic_player import RLBasicPlayer
 from players.ivan_pesic import IvanPesic
 from players.reinforce_player import ReinforcePlayer
-from players.ivan_pesic_nebojsa import IvanPesicNebojsa
+#from players.ivan_pesic_nebojsa import IvanPesicNebojsa
 from players.human_player import HumanPlayer
 
 # Radi samo iz komandne linije
@@ -57,7 +57,6 @@ def empty_board(dim):
     for i in range(dim + 2, 2 * dim + 3):  # 4
         window.addch(dim + 2, i, HOME_CHAR, curses.color_pair(4))
     window.addch(dim + 2, dim + 2, ' ')
-    # TODO: Nacrtati početna polja
     return window
 
 

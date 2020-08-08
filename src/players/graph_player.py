@@ -7,16 +7,16 @@ class GraphPlayer(object):
     def __init__(self, env, read=None):
         self.log_probs = []
         self.rewards = []
-        self.agent = GraphAgent(state_size=(env.board_length(), env.num_players()),
-                                action_size=env.action_space())
+        self.env = env
+        self.agent = GraphAgent(env.board_length(), env.num_players, env.action_space())
         if read is not None:
             self.agent.model.load_state_dict(torch.load(read))
             self.agent.model.eval()
         return
 
-    def play(self, state, num_actions):
+    def play(self, _, num_actions):
 
-        action, log_prob = self.agent.get_action(state)
+        action, log_prob = self.agent.get_action(self.env.features_matrix(), self.env.adj)
         self.log_probs.append(log_prob)
 
         return action
