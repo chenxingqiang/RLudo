@@ -184,26 +184,9 @@ class Ludo(object):
                           torch.flatten(self.home_state),
                           dice_hot)).float()
 
-    def action_space(self):
-        return TOKENS_PER_PLAYER
-
-    def env_space(self):
-        """
-        Total number of parameters representing a state
-        :return: Integer
-        """
-        return MAX_PLAYERS * (TOKENS_PER_PLAYER + BOARD_LENGTH) + DICE_MAX
-
-    def board_length(self):
-        return BOARD_LENGTH
-
     def roll_dice(self):
-        """
-        Dice rolls are handled by environment and are passed with state
-        :return: None
-        """
+        """  Dice rolls are handled by environment and are passed with state """
         self.roll = random.randrange(0, DICE_MAX)
-        return
 
     def lose_reward(self, player):
         """
@@ -213,8 +196,29 @@ class Ludo(object):
         """
         return None if player == self.winning_player else LOSE_REWARD
 
+    def player_at_pos(self, pos):
+        """ Returns player at given position """
+        return (self.board_state[(pos + self.roll + 1) % BOARD_LENGTH] - 1) // TOKENS_PER_PLAYER
+
+    ###################
+    #    CONSTANTS    #
+    ###################
+
     def dice_max(self):
         return DICE_MAX
+
+    def board_length(self):
+        return BOARD_LENGTH
+
+    def players(self):
+        return self.num_players
+
+    def action_space(self):
+        return TOKENS_PER_PLAYER
+
+    def env_space(self):
+        """ Total number of parameters representing a state """
+        return MAX_PLAYERS * (TOKENS_PER_PLAYER + BOARD_LENGTH) + DICE_MAX
 
     ##################################
     #    HERE COME THE HEURISTICS    #
@@ -231,7 +235,7 @@ class Ludo(object):
         pos = self.positions[self.current_player, action]
         if self.positions[self.current_player, action] == -1:
             return self.roll == DICE_MAX - 1
-        return (self.board_state[(pos + self.roll + 1) % BOARD_LENGTH]  - 1)//TOKENS_PER_PLAYER != self.current_player
+        return self.player_at_pos((pos + self.roll + 1) % BOARD_LENGTH) != self.current_player
 
     def dolaze_po_mene(self, action):
         """
@@ -242,8 +246,8 @@ class Ludo(object):
         if my_pos == -1:
             return False
         for pos in range(my_pos - 6, my_pos):
-            player_at_pos = self.board_state[pos]
-            if player_at_pos != 0 and player_at_pos != self.current_player + 1:
+            player_at_pos = self.player_at_pos(action)
+            if player_at_pos != -1 and player_at_pos != self.current_player:
                 return True
         return False
 
@@ -260,8 +264,8 @@ class Ludo(object):
         if my_pos > BOARD_LENGTH:
             return False
         for pos in range(my_pos - 6, my_pos):
-            player_at_pos = self.board_state[pos]
-            if player_at_pos != 0 and player_at_pos != self.current_player + 1:
+            player_at_pos = self.player_at_pos(action)
+            if player_at_pos != -1 and player_at_pos != self.current_player:
                 return True
         return False
 
@@ -307,4 +311,13 @@ class Ludo(object):
                     adjmat[i, j] = 1
         return self.to_sparse(adjmat)
 
-
+    def features_matrix(self):
+        """
+        Returns one-hot encoded board state in matrix form
+        :return: matrix of size BOARD_LENGTH * TOKENS_PER_PLAYER
+        """
+        # TODO: Raditi one-hot bez fora
+        feat = torch.zeros(size=(BOARD_LENGTH, TOKENS_PER_PLAYER))
+        for i in range(BOARD_LENGTH):
+            feat[i, self.player_at_pos(i)] = 1
+        return feat

@@ -1,4 +1,4 @@
-from players.NeuralNets.gcn import GCN
+from players.NeuralNets.gcn import GraphAgent
 import torch
 
 
@@ -7,8 +7,8 @@ class GraphPlayer(object):
     def __init__(self, env, read=None):
         self.log_probs = []
         self.rewards = []
-        self.agent = ReinforceAgent(state_size=env.env_space(),
-                                    action_size=env.action_space())
+        self.agent = GraphAgent(state_size=(env.board_length(), env.num_players()),
+                                action_size=env.action_space())
         if read is not None:
             self.agent.model.load_state_dict(torch.load(read))
             self.agent.model.eval()

@@ -4,6 +4,7 @@ from players.random_player import RandomPlayer
 from players.ivan_pesic import IvanPesic
 from players.reinforce_player import ReinforcePlayer
 from players.ivan_pesic import IvanPesic
+from players.graph_player import GraphPlayer
 from game_loop import loop
 import random
 
