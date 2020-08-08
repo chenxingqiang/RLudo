@@ -71,9 +71,8 @@ class Ludo(object):
         terminate = False
         player = self.current_player
         playable = (torch.sum(self.positions[player]) != -TOKENS_PER_PLAYER)
-
         # print(self.board_state,self.roll,self.current_player,action)
-
+        print(player)
         # ukoliko nije dobio sesticu, menja se na sledeceg igraca
         if not self.roll == DICE_MAX - 1:
             self.current_player += 1
@@ -87,6 +86,7 @@ class Ludo(object):
         # Bacanje do 3 puta ako nema nista na tabli
         if not playable and self.running_total < 3 and not self.roll == DICE_MAX - 1:
             self.running_total += 1
+            self.current_player=player
             return 0, terminate
         self.running_total = 1
 
@@ -95,7 +95,7 @@ class Ludo(object):
             # Bacena sestica; figurica ulazi u igru
             if self.roll == DICE_MAX - 1:
                 # Ilegalan potez, pomeranje figurice koja je vec na cilju
-                if not self.board_state[self.starts[player]] == 0:
+                if self.home_state[self.current_player][action] == 1:
                     return ILLEGAL_MOVE_REWARD, terminate
                 nxt = self.starts[player]
                 delta = 1
@@ -146,7 +146,8 @@ class Ludo(object):
                         (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = 0
             reward = CAPTURE_REWARD
         self.passed[player, action] += delta
-        self.board_state[self.positions[player, action]] = 0
+        if not self.positions[player, action]==-1:
+            self.board_state[self.positions[player, action]] = 0
         self.positions[player, action] = nxt
         self.board_state[nxt] = TOKENS_PER_PLAYER * player + action + 1
         return reward, terminate
