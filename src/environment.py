@@ -1,5 +1,6 @@
 import random
 import torch
+import torch.sparse
 
 START_DISTANCE = 10
 MAX_PLAYERS = 4
@@ -276,3 +277,34 @@ class Ludo(object):
             return x != 0 and x != self.current_player + 1
         s = self.board_state[(self.roll + 1 + my_pos) % self.board_length()]
         return s != 0 and s != self.current_player + 1
+
+    #############################
+    #    GRAFOVSKE BOLESTINE    #
+    #############################
+
+    def to_sparse(self, x):
+        """ converts dense tensor x to sparse format """
+        x_typename = torch.typename(x).split('.')[-1]
+        sparse_tensortype = getattr(torch.sparse, x_typename)
+
+        indices = torch.nonzero(x)
+        if len(indices.shape) == 0:  # if all elements are zeros
+            return sparse_tensortype(*x.shape)
+        indices = indices.t()
+        values = x[tuple(indices[i] for i in range(indices.shape[0]))]
+        return sparse_tensortype(indices, values, x.size())
+
+    def sparse_adjacency(self):
+        """
+        Precalculating adjacency matrix for graph nn.
+        Ones on the diagonal are known to improve stability.
+        :return: Sparse adjacency matrix
+        """
+        adjmat = torch.zeros(size=(BOARD_LENGTH, BOARD_LENGTH))
+        for i in range(BOARD_LENGTH):
+            for j in range(BOARD_LENGTH):
+                if abs(i - j) <= DICE_MAX:
+                    adjmat[i, j] = 1
+        return self.to_sparse(adjmat)
+
+
