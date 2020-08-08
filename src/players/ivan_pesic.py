@@ -99,5 +99,5 @@ class IvanPesic(object):
                 return False
             x = self.env.board_state[self.env.starts[self.env.current_player]]
             return x != 0 and x != self.env.current_player + 1
-        s = self.env.board_state[(self.env.roll + 1 + my_pos) % self.env.board_state]
+        s = self.env.board_state[(self.env.roll + 1 + my_pos) % self.env.board_length()]
         return s != 0 and s != self.env.current_player + 1
