@@ -104,9 +104,9 @@ class Ludo(object):
                 return 0, terminate
         # pomera figuricu i igra
         else:
-            nxt = self.positions[player, action] + self.roll
+            nxt = self.positions[player, action] + self.roll + 1
             nxt %= BOARD_LENGTH
-            delta = self.roll
+            delta = self.roll + 1
         reward = 0
 
         # Ako je presao celu tablu
@@ -198,6 +198,9 @@ class Ludo(object):
         :return: reward for losing the game
         """
         return None if player == self.winning_player else LOSE_REWARD
+
+    def dice_max(self):
+        return DICE_MAX
 
     def is_action_valid(self, action):
         """
