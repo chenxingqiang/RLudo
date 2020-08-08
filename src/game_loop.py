@@ -3,6 +3,11 @@ import curses.textpad
 import random
 from environment import Ludo
 from players.random_player import RandomPlayer
+from players.rl_basic_player import RLBasicPlayer
+from players.ivan_pesic import IvanPesic
+from players.reinforce_player import ReinforcePlayer
+from players.ivan_pesic_nebojsa import IvanPesicNebojsa
+from players.human_player import HumanPlayer
 
 # Radi samo iz komandne linije
 
@@ -57,7 +62,7 @@ def empty_board(dim):
 
 
 def draw_board(dim, state, env):
-    window = curses.newwin(2 * dim + 5, 2 * dim + 5)
+    window = curses.newwin(2 * dim + 7, 2 * dim + 30)
 
     for i in range(dim + 1, dim + 4):
         for j in range(1, 2 * dim + 4):
@@ -165,6 +170,125 @@ def draw_board(dim, state, env):
         window.addch(2 * dim + 2, 2 * dim + 2, PATH_CHAR, curses.color_pair(4))
     return window
 
+def human_board(dim, state, env,player):
+    window = curses.newwin(2 * dim + 7, 2 * dim + 30)
+    PIECE=[['a' for j in range(TOKENS)] for i in range(PLAYERS)]
+    for i in range(PLAYERS):
+        for j in range(TOKENS):
+            if i!=player:
+                PIECE[i][j]=PIECE_CHAR
+            else:
+                PIECE[i][j]=chr(ord('1')+j)
+    for i in range(dim + 1, dim + 4):
+        for j in range(1, 2 * dim + 4):
+            plr=(state[0][matrix[i][j]] - 1) // TOKENS
+            tkn=(state[0][matrix[i][j]] - 1) % TOKENS
+            if state[0][matrix[i][j]] == 0:
+                window.addch(i, j, PATH_CHAR, curses.color_pair(255))
+            else:
+                window.addch(i, j, PIECE[plr][tkn], curses.color_pair(plr+1))
+            plr = (state[0][matrix[j][i]] - 1) // TOKENS
+            tkn = (state[0][matrix[j][i]] - 1) % TOKENS
+            if state[0][matrix[j][i]] == 0:
+                window.addch(j, i, PATH_CHAR, curses.color_pair(255))
+            else:
+                window.addch(j, i, PIECE[plr][tkn], curses.color_pair(plr+1))
+    for i in range(dim + 3, 2 * dim + 3):  # 1
+        if state[1][0][i - dim - 3] == 0:
+            window.addch(i, dim + 2, HOME_CHAR, curses.color_pair(1))
+        else:
+            window.addch(i, dim + 2, PIECE[0][i-dim-3], curses.color_pair(1))
+    for i in range(2, dim + 2):  # 3
+        if state[1][2][i - 2] == 0:
+            window.addch(dim + 2, i, HOME_CHAR, curses.color_pair(3))
+        else:
+            window.addch(dim + 2, i, PIECE[2][i-2], curses.color_pair(3))
+    for i in range(2, dim + 2):  # 2
+        if state[1][1][i - 2] == 0:
+            window.addch(i, dim + 2, HOME_CHAR, curses.color_pair(2))
+        else:
+            window.addch(i, dim + 2, PIECE[1][i-2], curses.color_pair(2))
+    for i in range(dim + 2, 2 * dim + 3):  # 4
+        if state[1][3][i - dim - 3] == 0:
+            window.addch(dim + 2, i, HOME_CHAR, curses.color_pair(4))
+        else:
+            window.addch(dim + 2, i, PIECE[3][i-dim-3], curses.color_pair(4))
+    window.addch(dim + 2, dim + 2, ' ')
+    if env.positions[0][0] == -1 and state[1][0][0] == 0:
+        window.addch(2 * dim + 3, 1, PIECE[0][0], curses.color_pair(1))
+    else:
+        window.addch(2 * dim + 3, 1, PATH_CHAR, curses.color_pair(1))
+    if env.positions[0][1] == -1 and state[1][0][1] == 0:
+        window.addch(2 * dim + 3, 2, PIECE[0][1], curses.color_pair(1))
+    else:
+        window.addch(2 * dim + 3, 2, PATH_CHAR, curses.color_pair(1))
+    if env.positions[0][2] == -1 and state[1][0][2] == 0:
+        window.addch(2 * dim + 2, 1, PIECE[0][2], curses.color_pair(1))
+    else:
+        window.addch(2 * dim + 2, 1, PATH_CHAR, curses.color_pair(1))
+    if env.positions[0][3] == -1 and state[1][0][3] == 0:
+        window.addch(2 * dim + 2, 2, PIECE[0][3], curses.color_pair(1))
+    else:
+        window.addch(2 * dim + 2, 2, PATH_CHAR, curses.color_pair(1))
+
+    if env.positions[1][0] == -1 and state[1][1][0] == 0:
+        window.addch(1, 2 * dim + 3, PIECE[1][0], curses.color_pair(2))
+    else:
+        window.addch(1, 2 * dim + 3, PATH_CHAR, curses.color_pair(2))
+
+    if env.positions[1][1] == -1 and state[1][1][1] == 0:
+        window.addch(2, 2 * dim + 3, PIECE[1][1], curses.color_pair(2))
+    else:
+        window.addch(2, 2 * dim + 3, PATH_CHAR, curses.color_pair(2))
+    if env.positions[1][2] == -1 and state[1][1][2] == 0:
+        window.addch(1, 2 * dim + 2, PIECE[1][2], curses.color_pair(2))
+    else:
+        window.addch(1, 2 * dim + 2, PATH_CHAR, curses.color_pair(2))
+
+    if env.positions[1][3] == -1 and state[1][1][3] == 0:
+        window.addch(2, 2 * dim + 2, PIECE[1][3], curses.color_pair(2))
+    else:
+        window.addch(2, 2 * dim + 2, PATH_CHAR, curses.color_pair(2))
+
+    if env.positions[2][0] == -1 and state[1][2][0] == 0:
+        window.addch(1, 1, PIECE[2][0], curses.color_pair(3))
+    else:
+        window.addch(1, 1, PATH_CHAR, curses.color_pair(3))
+
+    if env.positions[2][1] == -1 and state[1][2][1] == 0:
+        window.addch(1, 2, PIECE[2][1], curses.color_pair(3))
+    else:
+        window.addch(1, 2, PATH_CHAR, curses.color_pair(3))
+    if env.positions[2][2] == -1 and state[1][2][2] == 0:
+        window.addch(2, 1, PIECE[2][2], curses.color_pair(3))
+    else:
+        window.addch(2, 1, PATH_CHAR, curses.color_pair(3))
+
+    if env.positions[2][3] == -1 and state[1][2][3] == 0:
+        window.addch(2, 2, PIECE[2][3], curses.color_pair(3))
+    else:
+        window.addch(2, 2, PATH_CHAR, curses.color_pair(3))
+
+    if env.positions[3][0] == -1 and state[1][3][0] == 0:
+        window.addch(2 * dim + 3, 2 * dim + 3, PIECE[3][0], curses.color_pair(4))
+    else:
+        window.addch(2 * dim + 3, 2 * dim + 3, PATH_CHAR, curses.color_pair(4))
+
+    if env.positions[3][1] == -1 and state[1][3][1] == 0:
+        window.addch(2 * dim + 3, 2 * dim + 2, PIECE[3][1], curses.color_pair(4))
+    else:
+        window.addch(2 * dim + 3, 2 * dim + 2, PATH_CHAR, curses.color_pair(4))
+    if env.positions[3][2] == -1 and state[1][3][2] == 0:
+        window.addch(2 * dim + 2, 2 * dim + 3, PIECE[3][2], curses.color_pair(4))
+    else:
+        window.addch(2 * dim + 2, 2 * dim + 3, PATH_CHAR, curses.color_pair(4))
+
+    if env.positions[3][3] == -1 and state[1][3][3] == 0:
+        window.addch(2 * dim + 2, 2 * dim + 2, PIECE[3][3], curses.color_pair(4))
+    else:
+        window.addch(2 * dim + 2, 2 * dim + 2, PATH_CHAR, curses.color_pair(4))
+    return window
+
 
 def raw_loop(screen):
     screen.clear()
@@ -174,16 +298,31 @@ def raw_loop(screen):
     game_end = False
     env = Ludo(PLAYERS)
     global agents
+    if agents==None:
+        agents = [IvanPesicNebojsa(env) for i in range(PLAYERS)]
+    agents[0]=RLBasicPlayer(env,"players\saves\RLBasic1500.pth")
+    agents[3]=HumanPlayer(env)
     if agents == None:
         agents = [RandomPlayer() for i in range(PLAYERS)]
     pstate = env.current_state()
     while not game_end:
-        action = agents[env.current_player].play(pstate, TOKENS)
+        if isinstance(agents[env.current_player],HumanPlayer):    
+            window=human_board(4, state, env,env.current_player)
+            window.addstr(2*4+5,0,'Igrac ')
+            window.addstr(2*4+5,6,str(env.current_player+1))
+            window.addstr(2*4+5,8,'je na potezu')
+            window.addstr(2*4+6,0,'Na kocki je bacen broj ')
+            window.addstr(2*4+6,23,str(env.roll+1))
+            window.refresh()
+            curses.napms(30)
+            c = window.getch()
+            action=agents[env.current_player].play(c)
+        else:
+            action = agents[env.current_player].play(pstate, TOKENS)
         pstate, r, game_end = env.step(action)
-        print(env.current_player)
         state = env.current_state_as_tuple()
         draw_board(4, state, env).refresh()
-        curses.napms(300)
+        curses.napms(30)
     curses.curs_set(1)
     print('Player ', env.winning_player + 1, ' wins')
 
