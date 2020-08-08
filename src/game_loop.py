@@ -174,7 +174,7 @@ def raw_loop(screen):
     game_end = False
     env = Ludo(PLAYERS)
     global agents
-    if agents==None:
+    if agents == None:
         agents = [RandomPlayer() for i in range(PLAYERS)]
     pstate = env.current_state()
     while not game_end:
@@ -190,7 +190,7 @@ def raw_loop(screen):
 
 def loop(ag=None):
     global agents
-    agents=ag
+    agents = ag
     curses.wrapper(raw_loop)
     # raw_loop(None)
     return

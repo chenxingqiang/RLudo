@@ -1,6 +1,5 @@
 import random
 import torch
-import numpy as np
 
 START_DISTANCE = 10
 MAX_PLAYERS = 4
@@ -9,10 +8,14 @@ DICE_MAX = 6
 
 BOARD_LENGTH = MAX_PLAYERS * START_DISTANCE
 
-ILLEGAL_MOVE_REWARD = -100
-WIN_REWARD = 100
-LOSE_REWARD = -100
-
+ILLEGAL_MOVE_REWARD = -2
+WIN_REWARD = 20
+LOSE_REWARD = -20
+CAPTURE_REWARD = 0.1
+HOME_RUN_REWARD = 1
+FAST_REWARD = 0.2
+DEFENSE_REWARD = 0.0005  # To be multiplied with passed
+START_REWARD = 0.15
 
 # ACTIONS = ['^', 'v', '<', '>']
 # REWARD = {' ': -5.0, '*': -10.0, 'T': 20.0, 'G': 100.0}
@@ -87,7 +90,6 @@ class Ludo(object):
             return 0, terminate
         self.running_total = 1
 
-
         # Figurica nije jos usla u igru
         if cur == -1:
             # Bacena sestica; figurica ulazi u igru
@@ -101,13 +103,22 @@ class Ludo(object):
             elif playable:
                 return ILLEGAL_MOVE_REWARD, terminate
             else:
-                return 0, terminate
+                return START_REWARD, terminate
         # pomera figuricu i igra
         else:
             nxt = self.positions[player, action] + self.roll + 1
             nxt %= BOARD_LENGTH
             delta = self.roll + 1
-        reward = 0
+
+        reward = FAST_REWARD  # Ako pomeramo najdaljeg
+        for i in range(TOKENS_PER_PLAYER):
+            if self.home_state[player, i] == 1:
+                continue
+            if self.passed[player, i] > self.passed[player, action]:
+                reward = 0
+                break
+        # Ako branimo
+        reward = DEFENSE_REWARD * self.passed[player, action] ** 2 if self.dolazice_po_mene(action) else reward
 
         # Ako je presao celu tablu
         if self.passed[player, action] + delta >= BOARD_LENGTH:
@@ -120,7 +131,7 @@ class Ludo(object):
                 self.winning_player = player
                 return WIN_REWARD, terminate
             self.roll_dice()
-            return 0, terminate
+            return HOME_RUN_REWARD, terminate
 
         # Ilegalan potez, zavrsio na polju koje je vec zauzeto od strane svoje figure
         if (self.board_state[nxt] - 1) // TOKENS_PER_PLAYER == player \
@@ -133,6 +144,7 @@ class Ludo(object):
                            (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = -1
             self.passed[(self.board_state[nxt] - 1) // TOKENS_PER_PLAYER,
                         (self.board_state[nxt] - 1) % TOKENS_PER_PLAYER] = 0
+            reward = CAPTURE_REWARD
         self.passed[player, action] += delta
         self.board_state[self.positions[player, action]] = 0
         self.positions[player, action] = nxt
@@ -162,7 +174,7 @@ class Ludo(object):
         Returns full current board state as a tensor
         :return: Tensor to be passes as input to nn
         """
-        # Yeet način da se one-hotuje board state
+        # Yeet način da se one-hotuje board state, not recommended
         board_hot = torch.cat([(((self.board_state + 3) // 4) == i + 1).long() for i in range(MAX_PLAYERS)])
         dice_hot = torch.zeros(size=[DICE_MAX], dtype=torch.long)
         dice_hot[self.roll] = 1
@@ -202,6 +214,10 @@ class Ludo(object):
     def dice_max(self):
         return DICE_MAX
 
+    ##################################
+    #    HERE COME THE HEURISTICS    #
+    ##################################
+
     def is_action_valid(self, action):
         """
         Returns whether given action is a valid move for current player
@@ -214,3 +230,48 @@ class Ludo(object):
         if self.positions[self.current_player, action] == -1:
             return self.roll == DICE_MAX - 1
         return self.board_state[(pos + self.roll - 1) % BOARD_LENGTH] != self.current_player + 1
+
+    def dolaze_po_mene(self, action):
+        """
+        DEFENSE HEURISTIC
+        Ispitujemo da li je pozicija napadnuta
+        """
+        my_pos = self.positions[self.current_player, action]
+        if my_pos == -1:
+            return False
+        for pos in range(my_pos - 6, my_pos):
+            player_at_pos = self.board_state[pos]
+            if player_at_pos != 0 and player_at_pos != self.current_player + 1:
+                return True
+        return False
+
+    def dolazice_po_mene(self, action):
+        """
+        FUTURE DEFENSE HEURISTIC
+        Ispitujemo da li je pozicija napadnuta
+        """
+        my_pos = self.positions[self.current_player, action]
+        if my_pos == -1:
+            my_pos = self.starts[self.current_player]
+        my_pass = self.passed[self.current_player, action]
+        my_pos = my_pass + self.roll + 1
+        if my_pos > BOARD_LENGTH:
+            return False
+        for pos in range(my_pos - 6, my_pos):
+            player_at_pos = self.board_state[pos]
+            if player_at_pos != 0 and player_at_pos != self.current_player + 1:
+                return True
+        return False
+
+    def ilja_mode(self, action):
+        """
+        ATTACK HEURISTIC
+        """
+        my_pos = self.positions[self.current_player, action]
+        if my_pos == -1:
+            if self.roll != DICE_MAX - 1:
+                return False
+            x = self.board_state[self.starts[self.current_player]]
+            return x != 0 and x != self.current_player + 1
+        s = self.board_state[(self.roll + 1 + my_pos) % self.board_length()]
+        return s != 0 and s != self.current_player + 1
