@@ -1,6 +1,7 @@
 from players.NeuralNets.gcn import GraphAgent
 import torch
 
+#gRAF ha-ha!
 
 class GraphPlayer(object):
 
@@ -15,8 +16,7 @@ class GraphPlayer(object):
         return
 
     def play(self, _, num_actions):
-
-        action, log_prob = self.agent.get_action(self.env.features_matrix(), self.env.adj)
+        action, log_prob = self.agent.get_action(self.env.features_matrix(), self.env.adj, self.env.dice_hot())
         self.log_probs.append(log_prob)
 
         return action

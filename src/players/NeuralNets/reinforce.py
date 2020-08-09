@@ -18,16 +18,10 @@ class ReinforceNet(nn.Module):
             nn.Linear(state_size, 200),
             nn.Dropout(p=DROPOUT),
             nn.ReLU(),
-            nn.Linear(200, 100),
+            nn.Linear(200, 30),
             nn.Dropout(p=DROPOUT),
             nn.ReLU(),
-            nn.Linear(100, 50),
-            nn.Dropout(p=DROPOUT),
-            nn.ReLU(),
-            nn.Linear(50, 25),
-            nn.Dropout(p=DROPOUT),
-            nn.ReLU(),
-            nn.Linear(25, action_size))
+            nn.Linear(30, action_size))
 
     def forward(self, x):
         return F.softmax(self.neuralnet(x))

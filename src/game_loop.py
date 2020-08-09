@@ -8,6 +8,7 @@ from players.ivan_pesic import IvanPesic
 from players.reinforce_player import ReinforcePlayer
 #from players.ivan_pesic_nebojsa import IvanPesicNebojsa
 from players.human_player import HumanPlayer
+from players.graph_player import GraphPlayer
 
 # Radi samo iz komandne linije
 
@@ -298,8 +299,9 @@ def raw_loop(screen):
     env = Ludo(PLAYERS)
     global agents
     if agents==None:
-        agents = [IvanPesicNebojsa(env) for i in range(PLAYERS)]
-    agents[0]=RLBasicPlayer(env,"players\saves\RLBasic1500.pth")
+        agents = [IvanPesic(env) for i in range(PLAYERS)]
+    agents[0]=ReinforcePlayer(env, "players\saves\Reinforce30000-1.pth")
+    agents[1]=RLBasicPlayer(env, "players\saves\RLBasic30000-2.pth")
     agents[3]=HumanPlayer(env)
     if agents == None:
         agents = [RandomPlayer() for i in range(PLAYERS)]

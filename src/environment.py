@@ -10,14 +10,14 @@ DICE_MAX = 6
 
 BOARD_LENGTH = MAX_PLAYERS * START_DISTANCE
 
-ILLEGAL_MOVE_REWARD = -2
-WIN_REWARD = 20
-LOSE_REWARD = -20
-CAPTURE_REWARD = 0.1
-HOME_RUN_REWARD = 1
-FAST_REWARD = 0.2
-DEFENSE_REWARD = 0.0005  # To be multiplied with passed
-START_REWARD = 0.15
+ILLEGAL_MOVE_REWARD = -100
+WIN_REWARD = 100  # 20
+LOSE_REWARD = -100  # -20
+CAPTURE_REWARD = 0  # 0.1
+HOME_RUN_REWARD = 0  # 1
+FAST_REWARD = 0  # 0.2
+DEFENSE_REWARD = 0  # 0.0005  # To be multiplied with passed
+START_REWARD = 0  # 0.15
 
 # ACTIONS = ['^', 'v', '<', '>']
 # REWARD = {' ': -5.0, '*': -10.0, 'T': 20.0, 'G': 100.0}
@@ -111,7 +111,6 @@ class Ludo(object):
             nxt = self.positions[player, action] + self.roll + 1
             nxt %= BOARD_LENGTH
             delta = self.roll + 1
-
         reward = FAST_REWARD  # Ako pomeramo najdaljeg
         for i in range(TOKENS_PER_PLAYER):
             if self.home_state[player, i] == 1:
@@ -121,7 +120,7 @@ class Ludo(object):
                 break
         # Ako branimo
         reward = DEFENSE_REWARD * self.passed[player, action] ** 2 if self.dolazice_po_mene(action) else reward
-
+        reward=0
         # Ako je presao celu tablu
         if self.passed[player, action] + delta >= BOARD_LENGTH:
             self.board_state[self.positions[player, action]] = 0
@@ -199,7 +198,12 @@ class Ludo(object):
 
     def player_at_pos(self, pos):
         """ Returns player at given position """
-        return (self.board_state[(pos + self.roll + 1) % BOARD_LENGTH] - 1) // TOKENS_PER_PLAYER
+        return (self.board_state[pos % BOARD_LENGTH] - 1) // TOKENS_PER_PLAYER
+
+    def dice_hot(self):
+        dice_hot = torch.zeros(size=[DICE_MAX], dtype=torch.long)
+        dice_hot[self.roll] = 1
+        return dice_hot
 
     ###################
     #    CONSTANTS    #
@@ -280,7 +284,6 @@ class Ludo(object):
             return x != 0 and x != self.current_player + 1
         s = self.board_state[(self.roll + 1 + my_pos) % self.board_length()]
         return s != 0 and s != self.current_player + 1
-
     #############################
     #    GRAFOVSKE BOLESTINE    #
     #############################
@@ -324,3 +327,4 @@ class Ludo(object):
         for i in range(BOARD_LENGTH):
             feat[i, self.player_at_pos(i)] = 1
         return feat
+    

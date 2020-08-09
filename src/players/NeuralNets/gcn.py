@@ -14,13 +14,17 @@ class GCN(nn.Module):
         super(GCN, self).__init__()
 
         h = 8
-        self.gc = GraphConvolution(nfeat, h)
-        self.ln = nn.Linear(nnode*h, nclass)
+        self.gc1 = GraphConvolution(nfeat, h)
+        self.gc2 = GraphConvolution(h, h) #gRAF h h!
+        self.ln = nn.Linear(nnode*h+6, nclass)
 
-    def forward(self, x, adj):
-        x = F.relu(self.gc(x, adj))
+    def forward(self, x, adj, dice_hot):
+        x = F.relu(self.gc1(x, adj))
+        x = F.dropout(x, DROPOUT, training=self.training)
+        x = F.relu(self.gc2(x, adj))
         x = F.dropout(x, DROPOUT, training=self.training)
         x = torch.flatten(x)
+        x = torch.cat((x, dice_hot.float()))
         x = self.ln(x)
         return F.softmax(x)
 
@@ -32,8 +36,8 @@ class GraphAgent(object):
         self.num_actions = action_size
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LR)
 
-    def forward(self, x, adj):
-        return self.model(x, adj)
+    def forward(self, x, adj, dice_hot):
+        return self.model(x, adj, dice_hot)
 
     def backward(self, rewards, log_probs):
         """
@@ -65,13 +69,13 @@ class GraphAgent(object):
         policy_gradient.backward()
         self.optimizer.step()
 
-    def get_action(self, state, adj):
+    def get_action(self, state, adj, dice_hot):
         """
         Runs a state through NN to get action probabilities
         :param state: Current state
         :return: Most probable action and log probability
         """
-        probs = self.forward(Variable(state), adj)
+        probs = self.forward(Variable(state), adj, dice_hot)
         highest_prob_action = np.random.choice(self.num_actions, p=np.squeeze(probs.detach().numpy()))
         log_prob = torch.log(probs.squeeze(0)[highest_prob_action])
         return highest_prob_action, log_prob

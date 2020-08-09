@@ -4,13 +4,14 @@ from players.random_player import RandomPlayer
 from players.ivan_pesic import IvanPesic
 from players.reinforce_player import ReinforcePlayer
 from players.ivan_pesic import IvanPesic
+from players.ivan_pesic_nebojsa import IvanPesicNebojsa
 from players.graph_player import GraphPlayer
 from game_loop import loop
 import random
 
 TOKENS = 4
-TRAIN_EPISODES = 10
-TEST_EPISODES = 20
+TRAIN_EPISODES = 0
+TEST_EPISODES = 100
 PLAYERS = 4
 
 
@@ -22,9 +23,10 @@ def run_one_episode(state, agents, train):
     while not game_end:
         x = env.current_player
         action = agents[x].play(state, TOKENS)
-        state, reward, game_end = env.step(action)
+        nextstate, reward, game_end = env.step(action)
         if train:
-            agents[x].recalculate_step(state, reward)
+            agents[x].recalculate_step(nextstate, reward)
+        state=nextstate
     if train:
         for i in range(len(agents)):
             agents[i].recalculate_end(env.lose_reward(i))
@@ -37,8 +39,11 @@ if __name__ == '__main__':
     state = env.current_state()
 
     # Initialize agents to be trained
-    agents = [GraphPlayer(env) for i in range(PLAYERS)]
+    #agents = [ReinforcePlayer(env,"players\saves\Reinforce30000-1.pth") for i in range(PLAYERS)]
 
+    agents = [ReinforcePlayer(env,"players\saves\Reinforce30000-1.pth"), RLBasicPlayer(env,"players\saves\RLBasic30000-2.pth"),RLBasicPlayer(env,"players\saves\RLBasic30000-3.pth"),
+RLBasicPlayer(env,"players\saves\RLBasic30000-4.pth")]
+    print(len(agents))
     # Train all agents
     for i in range(TRAIN_EPISODES):
         run_one_episode(state, agents, True)
@@ -46,19 +51,27 @@ if __name__ == '__main__':
 
     # Initialize agents for test
     win = 0
-    if isinstance(agents[0], RLBasicPlayer):
-        agents[0].epsilon = 0
-    for i in range(1, PLAYERS):
-        agents[i] = IvanPesic(env)
+    agents[1].epsilon=0
+    agents[2].epsilon=0
+    agents[3].epsilon=0
+    #agents[0].save("players\saves\RLBasic30000-1.pth")
+    #agents[1].save("players\saves\RLBasic30000-2.pth")
+    #agents[2].save("players\saves\RLBasic30000-3.pth")
+    #agents[3].save("players\saves\RLBasic30000-4.pth")
+    #agents[0].epsilon = 0
+    #for i in range(1, PLAYERS):
+    #    agents[i] = IvanPesic(env)
+
+    #agents[0].save("src\players\saves\RlBasic.pth")
 
     # Test first agent vs randoms
     for i in range(TEST_EPISODES):
         run_one_episode(state, agents, False)
-        if env.winning_player == 1:
+        #print(env.winning_player)
+        if env.winning_player == 0:
             win += 1
-    # loop(agents)
-    agents[0].save("players\saves\RLBasic10.pth")
+    #loop(agents)
 
     print('winrate ', win / TEST_EPISODES)
     # loop(agents)
-    # agents[0].save("players\saves\RLBasic1500.pth")
+    # agents[0].save("players\saves\RLBasic1500-alternative.pth")
