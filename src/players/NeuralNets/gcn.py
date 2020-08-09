@@ -13,19 +13,18 @@ class GCN(nn.Module):
     def __init__(self, nnode, nfeat, nclass):
         super(GCN, self).__init__()
 
-        h = 8
-        self.gc1 = GraphConvolution(nfeat, h)
-        self.gc2 = GraphConvolution(h, h) #gRAF h h!
-        self.ln = nn.Linear(nnode*h+6, nclass)
+        h = 6
+        self.gc = GraphConvolution(nfeat, h)  #gRAF h h!
+        self.ln1 = nn.Linear(nnode*h+6, 30)
+        self.ln2 = nn.Linear(30, nclass)
 
     def forward(self, x, adj, dice_hot):
-        x = F.relu(self.gc1(x, adj))
-        x = F.dropout(x, DROPOUT, training=self.training)
-        x = F.relu(self.gc2(x, adj))
-        x = F.dropout(x, DROPOUT, training=self.training)
+        x = F.relu(self.gc(x, adj))
         x = torch.flatten(x)
         x = torch.cat((x, dice_hot.float()))
-        x = self.ln(x)
+        x = F.relu(self.ln1(x))
+        x = F.dropout(x, DROPOUT, training=self.training)
+        x = self.ln2(x)
         return F.softmax(x)
 
 

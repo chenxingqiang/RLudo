@@ -284,6 +284,7 @@ class Ludo(object):
             return x != 0 and x != self.current_player + 1
         s = self.board_state[(self.roll + 1 + my_pos) % self.board_length()]
         return s != 0 and s != self.current_player + 1
+
     #############################
     #    GRAFOVSKE BOLESTINE    #
     #############################

@@ -10,7 +10,7 @@ from game_loop import loop
 import random
 
 TOKENS = 4
-TRAIN_EPISODES = 0
+TRAIN_EPISODES = 10
 TEST_EPISODES = 100
 PLAYERS = 4
 
@@ -39,10 +39,8 @@ if __name__ == '__main__':
     state = env.current_state()
 
     # Initialize agents to be trained
-    #agents = [ReinforcePlayer(env,"players\saves\Reinforce30000-1.pth") for i in range(PLAYERS)]
+    agents = [GraphPlayer(env) for i in range(PLAYERS)]
 
-    agents = [ReinforcePlayer(env,"players\saves\Reinforce30000-1.pth"), RLBasicPlayer(env,"players\saves\RLBasic30000-2.pth"),RLBasicPlayer(env,"players\saves\RLBasic30000-3.pth"),
-RLBasicPlayer(env,"players\saves\RLBasic30000-4.pth")]
     print(len(agents))
     # Train all agents
     for i in range(TRAIN_EPISODES):
@@ -51,16 +49,13 @@ RLBasicPlayer(env,"players\saves\RLBasic30000-4.pth")]
 
     # Initialize agents for test
     win = 0
-    agents[1].epsilon=0
-    agents[2].epsilon=0
-    agents[3].epsilon=0
     #agents[0].save("players\saves\RLBasic30000-1.pth")
     #agents[1].save("players\saves\RLBasic30000-2.pth")
     #agents[2].save("players\saves\RLBasic30000-3.pth")
     #agents[3].save("players\saves\RLBasic30000-4.pth")
     #agents[0].epsilon = 0
-    #for i in range(1, PLAYERS):
-    #    agents[i] = IvanPesic(env)
+    for i in range(1, PLAYERS):
+        agents[i] = IvanPesic(env)
 
     #agents[0].save("src\players\saves\RlBasic.pth")
 
