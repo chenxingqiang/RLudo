@@ -308,12 +308,12 @@ class Ludo(object):
         :return: Sparse adjacency matrix
         """
         adjmat = torch.zeros(size=(BOARD_LENGTH, BOARD_LENGTH))
-        for i in range(BOARD_LENGTH):
-            for j in range(BOARD_LENGTH):
+        for i in range(-6, BOARD_LENGTH):
+            for j in range(-6, BOARD_LENGTH):
                 if abs(i - j) <= DICE_MAX:
                     adjmat[i, j] = 1
         # For our needs this can be simplified
-        deg = torch.eye(BOARD_LENGTH) / math.sqrt(2*DICE_MAX)
+        deg = torch.eye(BOARD_LENGTH) / math.sqrt(2*DICE_MAX + 1)
         adjmat = torch.mm(deg, adjmat)
         adjmat = torch.mm(adjmat, deg)
         return self.to_sparse(adjmat)
